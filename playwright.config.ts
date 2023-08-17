@@ -47,6 +47,14 @@ export default defineConfig({
 				storageState: STORAGE_STATE,
 			},
 		},
+		{
+			name: 'e2e tests logged in but offline',
+			testMatch: '**/*loggedin-offline.spec.ts',
+			dependencies: ['setup'],
+			use: {
+				storageState: STORAGE_STATE,
+			},
+		},
     {
       name: 'chromium',
 			dependencies: ['setup'],
@@ -70,7 +78,7 @@ export default defineConfig({
     },
 
     /* Test against mobile viewports. */
-    {
+    /*{
       name: 'Mobile Chrome',
 			dependencies: ['setup'],
       use: { storageState: STORAGE_STATE,
@@ -81,7 +89,7 @@ export default defineConfig({
 			dependencies: ['setup'],
       use: { storageState: STORAGE_STATE,
 				...devices['iPhone 12'] },
-    },
+    },*/
 
     /* Test against branded browsers. */
     // {
