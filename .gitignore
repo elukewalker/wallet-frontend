@@ -44,3 +44,12 @@ src/config/config.dev.ts
 src/config/config.prod.js
 ssl_keys/*
 *.tar.gz
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/playwright/.auth
+/test-results/
+/playwright-report/
+/playwright/.cache/
