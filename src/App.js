@@ -22,9 +22,9 @@ const Popup = React.lazy(() => import('./components/Popup'));
 
 
 
-
+// comment firebase messaging as it conflicts with the eDiplomas service worker. TODO move messaging to a different scope
 // Check that service workers are supported
-if ('serviceWorker' in navigator) {
+/*if ('serviceWorker' in navigator) {
 	window.addEventListener('load', () => {
 		navigator.serviceWorker.register('/firebase-messaging-sw.js')
 			.then(registration => {
@@ -36,7 +36,7 @@ if ('serviceWorker' in navigator) {
 				alert('Failed to register service worker. Some features may not work properly.');
 			});
 	});
-}
+}*/
 
 i18n
 	.use(initReactI18next)

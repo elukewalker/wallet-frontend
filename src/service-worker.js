@@ -70,3 +70,24 @@ self.addEventListener('message', (event) => {
 });
 
 // Any other custom service worker logic can go here.
+
+const matchVCStorageCb = ({ url, request, event }) => {
+  return url.pathname === "/storage/vc";
+};
+
+const handlerVCStorageCb = async ({ url, request, event, params }) => {
+  console.log("eDiplomas digital wallet get verified credentials");
+  if (navigator.onLine) {
+    console.log("online");
+		return await fetch(request);
+  } else {
+    console.log("offline - get credentials from local db");
+    const headers = new Headers();
+    const responseBody = '{"vc_list":[]}'; // TODO get creds from local db
+    return new Response(`${responseBody}`, {
+			headers: headers,
+		});
+  }
+};
+
+registerRoute(matchVCStorageCb, handlerVCStorageCb);
