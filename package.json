@@ -10,6 +10,7 @@
     "axios": "^1.4.0",
     "firebase": "^10.1.0",
     "i18next": "^23.2.11",
+    "idb": "^7.1.1",
     "jose": "^4.14.4",
     "js-cookie": "^3.0.5",
     "postcss": "^8.4.25",
@@ -39,12 +40,12 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.0",
+    "@playwright/test": "^1.37.1",
     "@types/jest": "^29.5.3",
     "@types/js-cookie": "^3.0.3",
     "@types/node": "^20.5.0",
     "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
-    "@playwright/test": "^1.37.1"
+    "@types/react-dom": "^18.2.7"
   },
   "scripts": {
     "start": "react-scripts start",

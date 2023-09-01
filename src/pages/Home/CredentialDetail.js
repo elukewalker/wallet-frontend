@@ -100,7 +100,7 @@ const CredentialDetail = () => {
 					{image && image.logoURL ? (
 					// Open the modal when the image is clicked
 					<div className="relative rounded-xl xl:w-4/5 md:w-full  sm:w-full overflow-hidden transition-shadow shadow-md hover:shadow-lg cursor-pointer w-full" onClick={() => setImageModalOpen(true)}>
-					<img src={image.logoURL} alt={image.logoURL} className="w-full object-cover rounded-xl" />
+					<img crossorigin="anonymous" src={image.logoURL} alt={image.logoURL} className="w-full object-cover rounded-xl" />
 
 				</div>
 					) : (
@@ -209,7 +209,7 @@ const CredentialDetail = () => {
 			{isImageModalOpen && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
 					<div className="relative">
-						<img src={image.logoURL} alt={image.logoURL} className="max-w-full max-h-full rounded-xl" />
+						<img crossorigin="anonymous" src={image.logoURL} alt={image.logoURL} className="max-w-full max-h-full rounded-xl" />
 					</div>
 					<button
 							className="absolute top-20 md:top-4 sm:top-4 right-4 text-white text-2xl z-10"

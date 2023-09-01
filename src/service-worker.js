@@ -7,11 +7,22 @@
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 
-import { clientsClaim } from 'workbox-core';
-import { ExpirationPlugin } from 'workbox-expiration';
-import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+import { clientsClaim } from "workbox-core";
+import { ExpirationPlugin } from "workbox-expiration";
+import { precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
+import { registerRoute } from "workbox-routing";
+import { StaleWhileRevalidate } from "workbox-strategies";
+import { openDB } from 'idb';
+
+const DB_NAME = "ediplomas-digital-wallet";
+const DB_VERSION = 1;
+const DB_STORAGE_VC_NAME = "storage";
+
+const dbPromise = openDB(DB_NAME, DB_VERSION, {
+  upgrade(db) {
+    db.createObjectStore(DB_STORAGE_VC_NAME);
+  },
+});
 
 clientsClaim();
 
@@ -24,16 +35,16 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Set up App Shell-style routing, so that all navigation requests
 // are fulfilled with your index.html shell. Learn more at
 // https://developers.google.com/web/fundamentals/architecture/app-shell
-const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
+const fileExtensionRegexp = new RegExp("/[^/?]+\\.[^/]+$");
 registerRoute(
   // Return false to exempt requests from being fulfilled by index.html.
   ({ request, url }) => {
     // If this isn't a navigation, skip.
-    if (request.mode !== 'navigate') {
+    if (request.mode !== "navigate") {
       return false;
     } // If this is a URL that starts with /_, skip.
 
-    if (url.pathname.startsWith('/_')) {
+    if (url.pathname.startsWith("/_")) {
       return false;
     } // If this looks like a URL for a resource, because it contains // a file extension, skip.
 
@@ -43,16 +54,18 @@ registerRoute(
 
     return true;
   },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
+  createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html")
 );
 
 // An example runtime caching route for requests that aren't handled by the
 // precache, in this case same-origin .png requests like those from in public/
+// and cross-origin .png requests for credential logo images
 registerRoute(
   // Add in any other file extensions or routing criteria as needed.
-  ({ url }) => url.origin === self.location.origin && url.pathname.endsWith('.png'), // Customize this strategy as needed, e.g., by changing to CacheFirst.
+  ({ url }) =>
+    url.pathname.endsWith(".png"), // Customize this strategy as needed, e.g., by changing to CacheFirst.
   new StaleWhileRevalidate({
-    cacheName: 'images',
+    cacheName: "images",
     plugins: [
       // Ensure that once this runtime cache reaches a maximum size the
       // least-recently used images are removed.
@@ -63,13 +76,49 @@ registerRoute(
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
 // Any other custom service worker logic can go here.
+
+ async function fetchAndSaveResponse(request) {
+	try {
+  	// Fetch the URL
+ 	 const response = await fetch(request);
+
+  	// Check if the response is OK
+		if (response.ok) {
+			// Save the response body to IndexedDB
+			saveResponseToIndexedDB(response.clone());
+
+			// Return the response
+			return response;
+		}
+  } catch (error) {
+
+		// Get the response from IndexedDB
+		const responseFromIndexedDB = await getResponseFromIndexedDB(request.url);
+
+		// If the response is not found, reject the promise with the error
+		if (!responseFromIndexedDB) {
+			throw error;
+		} else {
+			// Return the response from IndexedDB
+			return new Response(responseFromIndexedDB);
+		}
+  }
+}
+
+async function saveResponseToIndexedDB(response) {
+	return (await dbPromise).put(DB_STORAGE_VC_NAME, await response.text(), response.url);
+}
+
+async function getResponseFromIndexedDB(url) {
+	return (await dbPromise).get(DB_STORAGE_VC_NAME, url);
+}
 
 const matchVCStorageCb = ({ url, request, event }) => {
   return url.pathname === "/storage/vc";
@@ -77,17 +126,7 @@ const matchVCStorageCb = ({ url, request, event }) => {
 
 const handlerVCStorageCb = async ({ url, request, event, params }) => {
   console.log("eDiplomas digital wallet get verified credentials");
-  if (navigator.onLine) {
-    console.log("online");
-		return await fetch(request);
-  } else {
-    console.log("offline - get credentials from local db");
-    const headers = new Headers();
-    const responseBody = '{"vc_list":[]}'; // TODO get creds from local db
-    return new Response(`${responseBody}`, {
-			headers: headers,
-		});
-  }
+	return await fetchAndSaveResponse(request);
 };
 
 registerRoute(matchVCStorageCb, handlerVCStorageCb);

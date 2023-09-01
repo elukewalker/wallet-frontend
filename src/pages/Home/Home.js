@@ -64,7 +64,7 @@ const Home = () => {
 						onClick={() => handleImageClick(image)}
 
 					>
-						<img src={image.src} alt={image.alt} className="w-full h-auto rounded-xl" />
+						<img crossorigin="anonymous" src={image.src} alt={image.alt} className="w-full h-auto rounded-xl" />
 					</div>
 				))}
 				<div
