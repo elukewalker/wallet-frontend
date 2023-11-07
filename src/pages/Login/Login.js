@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaExclamationTriangle, FaEyeSlash, FaInfoCircle, FaLock, FaUser } from 'react-icons/fa';
 import { GoPasskeyFill, GoTrash } from 'react-icons/go';
 import { AiOutlineUnlock } from 'react-icons/ai';
 import { useTranslation } from 'react-i18next'; // Import useTranslation hook
-import { FaExclamationTriangle } from 'react-icons/fa';
 
 import * as api from '../../api';
 import { useLocalStorageKeystore } from '../../services/LocalStorageKeystore';
 import logo from '../../assets/images/logo.png';
 // import LanguageSelector from '../../components/LanguageSelector/LanguageSelector'; // Import the LanguageSelector component
+import * as CheckBrowserSupport from '../../components/BrowserSupport';
 import SeparatorLine from '../../components/SeparatorLine';
 
 const loginWithPassword = process.env.REACT_APP_LOGIN_WITH_PASSWORD ?
@@ -45,6 +45,7 @@ const FormInputField = ({
 	name,
 	onChange,
 	placeholder,
+	required,
 	value,
 	type,
 }) => {
@@ -61,6 +62,7 @@ const FormInputField = ({
 				value={value}
 				onChange={onChange}
 				aria-label={ariaLabel}
+				required={required}
 			/>
 
 			{type === 'password' && (
@@ -302,6 +304,7 @@ const WebauthnSignupLogin = ({
 										placeholder={t('enterPasskeyName')}
 										type="text"
 										value={name}
+										required
 									/>
 								</FormInputRow>
 							</>)}
@@ -481,91 +484,103 @@ const Login = () => {
 					{/* <div className="absolute top-2 right-2">
 						<LanguageSelector />
 					</div> */}
-					<p className="text-sm font-light text-gray-500 dark:text-gray-400 italic mb-2">
-					<FaExclamationTriangle className="text-md inline-block text-orange-600 mr-2" />
-						Learn more about{' '}
-						<a
-							href="https://github.com/wwWallet/wallet-frontend#prf-compatibility" target='blank_'
-							className="font-medium text-custom-blue hover:underline dark:text-blue-500"
-						>
-							PRF compatibility regarding browser support and supported operating systems.
-						</a>
-					</p> 
+					<CheckBrowserSupport.Ctx>
+						<CheckBrowserSupport.If test={(ctx) => !ctx.showWarningPortal}>
+							<p className="text-sm font-light text-gray-500 dark:text-gray-400 italic mb-2">
+								<CheckBrowserSupport.If test={(ctx) => ctx.browserSupported}>
+									<FaInfoCircle className="text-md inline-block text-gray-500 mr-2" />
+								</CheckBrowserSupport.If>
+								<CheckBrowserSupport.If test={(ctx) => !ctx.browserSupported}>
+									<FaExclamationTriangle className="text-md inline-block text-orange-600 mr-2" />
+								</CheckBrowserSupport.If>
+
+								{t('learnMorepart1')}{' '}
+								<a
+									href="https://github.com/wwWallet/wallet-frontend#prf-compatibility" target='blank_'
+									className="font-medium text-custom-blue hover:underline dark:text-blue-500"
+								>
+									{t('learnMorepart2')}
+								</a>
+							</p>
+						</CheckBrowserSupport.If>
+					</CheckBrowserSupport.Ctx>
 					<div className="p-6 space-y-4 md:space-y-6 sm:p-8 bg-white rounded-lg shadow dark:border">
-						<h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center dark:text-white">
-							{isLogin ? t('login') : t('signUp')}
-						</h1>
-						{ (loginWithPassword) ? 
-							<>
-								<form className="space-y-4 md:space-y-6" onSubmit={handleFormSubmit}>
-									{error && <div className="text-red-500">{error}</div>}
-									<FormInputRow label={t('usernameLabel')} name="username" IconComponent={FaUser}>
-										<FormInputField
-											ariaLabel="Username"
-											name="username"
-											onChange={handleInputChange}
-											placeholder={t('enterUsername')}
-											type="text"
-											value={username}
-										/>
-									</FormInputRow>
-		
-									<FormInputRow label={t('passwordLabel')} name="password" IconComponent={FaLock}>
-										<FormInputField
-											ariaLabel="Password"
-											name="password"
-											onChange={handleInputChange}
-											placeholder={t('enterPassword')}
-											type="password"
-											value={password}
-										/>
-										{!isLogin && password !== '' && <PasswordStrength label={t('strength')} value={passwordStrength} />}
-									</FormInputRow>
-		
-									{!isLogin && (
-										<FormInputRow label={t('confirmPasswordLabel')} name="confirm-password" IconComponent={FaLock}>
+						<CheckBrowserSupport.WarningPortal>
+							<h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center dark:text-white">
+								{isLogin ? t('login') : t('signUp')}
+							</h1>
+							{ (loginWithPassword) ?
+								<>
+									<form className="space-y-4 md:space-y-6" onSubmit={handleFormSubmit}>
+										{error && <div className="text-red-500">{error}</div>}
+										<FormInputRow label={t('usernameLabel')} name="username" IconComponent={FaUser}>
 											<FormInputField
-												ariaLabel="Confirm Password"
-												name="confirmPassword"
+												ariaLabel="Username"
+												name="username"
 												onChange={handleInputChange}
-												placeholder={t('enterconfirmPasswordLabel')}
-												type="password"
-												value={confirmPassword}
+												placeholder={t('enterUsername')}
+												type="text"
+												value={username}
 											/>
 										</FormInputRow>
-									)}
-		
-									<button
-										className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-										type="submit"
-										disabled={isSubmitting}
-									>
-										{isSubmitting ? t('submitting') : isLogin ? t('login') : t('signUp')}
-									</button>
-								</form>
-								<SeparatorLine>OR</SeparatorLine> 
-							</>
-							: 
-							<></>
-						}
+
+										<FormInputRow label={t('passwordLabel')} name="password" IconComponent={FaLock}>
+											<FormInputField
+												ariaLabel="Password"
+												name="password"
+												onChange={handleInputChange}
+												placeholder={t('enterPassword')}
+												type="password"
+												value={password}
+											/>
+											{!isLogin && password !== '' && <PasswordStrength label={t('strength')} value={passwordStrength} />}
+										</FormInputRow>
+
+										{!isLogin && (
+											<FormInputRow label={t('confirmPasswordLabel')} name="confirm-password" IconComponent={FaLock}>
+												<FormInputField
+													ariaLabel="Confirm Password"
+													name="confirmPassword"
+													onChange={handleInputChange}
+													placeholder={t('enterconfirmPasswordLabel')}
+													type="password"
+													value={confirmPassword}
+												/>
+											</FormInputRow>
+										)}
+
+										<button
+											className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+											type="submit"
+											disabled={isSubmitting}
+										>
+											{isSubmitting ? t('submitting') : isLogin ? t('login') : t('signUp')}
+										</button>
+									</form>
+									<SeparatorLine>OR</SeparatorLine>
+								</>
+								:
+								<></>
+							}
 
 
-						<WebauthnSignupLogin
-							isLogin={isLogin}
-							isSubmitting={isSubmitting}
-							setIsSubmitting={setIsSubmitting}
-						/>
+							<WebauthnSignupLogin
+								isLogin={isLogin}
+								isSubmitting={isSubmitting}
+								setIsSubmitting={setIsSubmitting}
+							/>
 
-						<p className="text-sm font-light text-gray-500 dark:text-gray-400">
-							{isLogin ? t('newHereQuestion') : t('alreadyHaveAccountQuestion')}
-							<a
-								href="/"
-								className="font-medium text-custom-blue hover:underline dark:text-blue-500"
-								onClick={toggleForm}
-							>
-								{isLogin ? t('signUp') : t('login')}
-							</a>
-						</p>
+							<p className="text-sm font-light text-gray-500 dark:text-gray-400">
+								{isLogin ? t('newHereQuestion') : t('alreadyHaveAccountQuestion')}
+								<a
+									href="/"
+									className="font-medium text-custom-blue hover:underline dark:text-blue-500"
+									onClick={toggleForm}
+								>
+									{isLogin ? t('signUp') : t('login')}
+								</a>
+							</p>
+						</CheckBrowserSupport.WarningPortal>
 					</div>
 				</div>
 			</div>
